@@ -1,11 +1,11 @@
 import React, { Component } from "react";
 import CategoryList from "./CategoryList";
 import Navi from "./Navi";
-import Product from "./ProductList";
+import ProductList from "./ProductList";
 import { Container, Row, Col } from "reactstrap";
 
 export default class App extends Component {
-  state = { currentCategory: "currentCategory", products: [] };
+  state = { currentCategory: "currentCategory", products: [], cart: [] };
 
   componentDidMount() {
     this.getProducts();
@@ -19,7 +19,6 @@ export default class App extends Component {
   getProducts = (categoryId) => {
     let url = "http://localhost:3000/products";
     if (categoryId) {
-      
       url += "?categoryId=" + categoryId;
     }
 
@@ -28,6 +27,25 @@ export default class App extends Component {
       .then((data) => this.setState({ products: data }));
   };
 
+  addToCart = (product) => {
+    let newCart = this.state.cart;
+    var addedItem = newCart.find(
+      (cartItem) => cartItem.product.id === product.id
+    );
+    if (addedItem) {
+      addedItem.quantity += 1;
+    } else {
+      newCart.push({ product: product, quantity: 1 });
+    }
+
+    this.setState({ cart: newCart });
+  };
+
+  removeFromCart = (product) =>{
+    let newCart = this.state.cart.filter(cartItem => cartItem.product.id !== product.id)
+    this.setState({cart:newCart})
+  }
+
   render() {
     let productInfo = { title: "Product List" };
     let categoryInfo = { title: "Category List" };
@@ -35,9 +53,7 @@ export default class App extends Component {
     return (
       <div>
         <Container>
-          <Row>
-            <Navi />
-          </Row>
+          <Navi removeFromCart={this.removeFromCart} cart={this.state.cart} />
           <Row>
             <Col xs="3">
               <CategoryList
@@ -47,7 +63,8 @@ export default class App extends Component {
               />
             </Col>
             <Col xs="9">
-              <Product
+              <ProductList
+                addToCart={this.addToCart}
                 products={this.state.products}
                 currentCategory={this.state.currentCategory}
                 info={productInfo}
